@@ -115,3 +115,7 @@ while true; do
         2) run_remote_script "https://raw.githubusercontent.com/Trizer540/HvmPanel/refs/heads/main/panel" "HVMPANEL INSTALLATION" ;;
         3) run_remote_script "https://raw.githubusercontent.com/Trizer540/Cloudflare/refs/heads/main/tailscale" "TAILSCALE INSTALLATION" ;;
         4) run_remote_script "https://raw.githubusercontent.com/Trizer540/Cloudflare/refs/heads/main/cloudflare" "CLOUDFLARE SETUP" ;;
+0)
+            exit
+            ;;
+done
