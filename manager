@@ -20,8 +20,10 @@ DANGER="\e[38;5;75m"
 GLOW="\e[38;5;51m"
 DANGER="\e[38;5;196m"
 
-echo -e "${YEL}"
-cat << "EOF"
+welcome_banner() {
+    clear
+    echo -e "${DANGER}"
+    cat << "EOF"
 ████████╗██████╗ ██╗███████╗███████╗██████╗ 
 ╚══██╔══╝██╔══██╗██║╚══███╔╝██╔════╝██╔══██╗
    ██║   ██████╔╝██║  ███╔╝ █████╗  ██████╔╝
@@ -103,6 +105,8 @@ EOF
     read -p $'\e[93m\e[1m Select option [0-4]: \e[0m' choice
     echo
 }
+# Main Loop
+welcome_banner
 # Main Loop
 while true; do
     show_menu
