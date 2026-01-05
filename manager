@@ -100,9 +100,17 @@ EOF
     print_menu_option "2" "HvmPanel Installation"
     print_menu_option "3" "Tailscale Installation"
     print_menu_option "4" "Cloudflare Setup"
-    print_menu_option "0" "Exit"
+    print_menu_option "5" "Ptero Panel Installation"
+    print_menu_option "6" "Ptero Wings Installation"
+    print_menu_option "7" "Panel Update"
+    print_menu_option "8" "Uninstall Tools"
+    print_menu_option "9" "Blueprint Setup"
+    print_menu_option "10" "Change Theme"
+    print_menu_option "11" "Minecraft Player Manager"
+    print_menu_option "12" "Jexactyl Installation"
+    print_menu_option "0" "Exit Manager"
     echo -e "\n${DANGER}══════════════════════════════════════════════════════════${RESET}"
-    read -p $'\e[93m\e[1m Select option [0-4]: \e[0m' choice
+    read -p $'\e[93m\e[1m Select option [0-10]: \e[0m' choice
     echo
 }
 # Main Loop
@@ -115,7 +123,133 @@ while true; do
         2) run_remote_script "https://raw.githubusercontent.com/Trizer540/HvmPanel/refs/heads/main/panel" "HVMPANEL INSTALLATION" ;;
         3) run_remote_script "https://raw.githubusercontent.com/Trizer540/Cloudflare/refs/heads/main/tailscale" "TAILSCALE INSTALLATION" ;;
         4) run_remote_script "https://raw.githubusercontent.com/Trizer540/Cloudflare/refs/heads/main/cloudflare" "CLOUDFLARE SETUP" ;;
+        5) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/panel2.sh" "PTERO PANEL INSTALLATION" ;;
+        6) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/wing2.sh" "PTERO WINGS INSTALLATION" ;;
+        7) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/update2.sh" "PANEL UPDATE" ;;
+        8) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/uninstall2.sh" "UNINSTALL TOOLS" ;;
+        9) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/Blueprint2.sh" "BLUEPRINT SETUP" ;;
+        10) run_remote_script "https://raw.githubusercontent.com/mahimxyzz/Vps/refs/heads/main/cd/th2.sh" "THEME CHANGER" ;;
+11)
+    clear
+    print_box_header "MINECRAFT PLAYER MANAGER" $NEON_PURPLE
+    progress "Installing Minecraft extensions..."
+    cd /var/www/pterodactyl || { error "Panel directory not found!"; read -p "Press Enter..."; continue; }
+    
+    wget -q https://github.com/mahimxyzz/Vps/raw/main/minecraftplayermanager.blueprint
+    wget -q https://github.com/mahimxyzz/Vps/raw/main/mcplugins.blueprint
+    wget -q https://github.com/mahimxyzz/Vps/raw/main/huxregister.blueprint
+    
+    blueprint -i mcplugins.blueprint && success "MC Plugins installed"
+    blueprint -i minecraftplayermanager.blueprint && success "Player Manager installed"
+    blueprint -i huxregister.blueprint && success "huxregister installed"
+    
+    read -p $'\e[93mPress Enter to continue...\e[0m' -r
+    ;;
 0)
             exit
             ;;
-clear
+12)
+            clear
+            print_box_header "JEXACTYL FULL PANEL MIGRATION" $NEON_PURPLE
+            
+            echo -e "${BOLD}${RED}╔══════════════════════════════════════════════════════════════╗${RESET}"
+            echo -e "${BOLD}${RED}║                     CRITICAL WARNING                         ║${RESET}"
+            echo -e "${BOLD}${RED}║  This will COMPLETELY OVERWRITE your Pterodactyl panel       ║${RESET}"
+            echo -e "${BOLD}${RED}║  with the full Jexactyl panel (billing, ticketing, etc.).    ║${RESET}"
+            echo -e "${BOLD}${RED}║                                                              ║${RESET}"
+            echo -e "${BOLD}${RED}║  THIS ACTION IS NOT REVERSIBLE WITHOUT A BACKUP!             ║${RESET}"
+            echo -e "${BOLD}${RED}║  BACKUP YOUR FILES AND DATABASE BEFORE CONTINUING!           ║${RESET}"
+            echo -e "${BOLD}${RED}╚══════════════════════════════════════════════════════════════╝${RESET}"
+            echo
+            
+            # Require user to type exactly "yes" to confirm
+            while true; do
+                echo -e "${YELLOW}${BOLD}To continue the migration, type ${UNDERLINE}yes${RESET}${YELLOW}${BOLD} exactly and press Enter:${RESET}"
+                read -r confirmation
+                if [[ "$confirmation" == "yes" ]]; then
+                    break
+                else
+                    echo -e "${RED}${BOLD}✘ Incorrect confirmation. You typed: '${confirmation:-<empty>}'${RESET}"
+                    echo -e "${YELLOW}Migration cancelled. Returning to menu...${RESET}"
+                    read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                    continue 2  # Return to main menu
+                fi
+            done
+            
+            progress "Navigating to panel directory..."
+            cd /var/www/pterodactyl || { 
+                echo -e "${RED}${BOLD}✘ Panel directory not found! (/var/www/pterodactyl)${RESET}"
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Placing panel in maintenance mode..."
+            php artisan down || {
+                echo -e "${RED}${BOLD}✘ Failed to enable maintenance mode.${RESET}"
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Downloading latest stable Jexactyl release (v3.7.4)..."
+            curl -L -o panel.tar.gz https://github.com/jexactyl/jexactyl/releases/download/v3.7.4/panel.tar.gz || {
+                echo -e "${RED}${BOLD}✘ Download failed. Check internet or GitHub status.${RESET}"
+                php artisan up
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Extracting and replacing files..."
+            tar -xzvf panel.tar.gz >/dev/null && rm -f panel.tar.gz || {
+                echo -e "${RED}${BOLD}✘ Failed to extract archive.${RESET}"
+                rm -f panel.tar.gz 2>/dev/null
+                php artisan up
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Setting storage and cache permissions..."
+            chmod -R 755 storage/* bootstrap/cache
+            
+            progress "Updating Composer dependencies..."
+            composer require asbiin/laravel-webauthn --no-interaction 2>/dev/null || echo -e "${YELLOW}ℹ WebAuthn package skipped (usually not needed).${RESET}"
+            composer install --no-dev --optimize-autoloader --no-interaction || {
+                echo -e "${RED}${BOLD}✘ Composer installation failed.${RESET}"
+                php artisan up
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Clearing application caches..."
+            php artisan optimize:clear
+            
+            progress "Running database migrations & seeding..."
+            php artisan migrate --seed --force || {
+                echo -e "${RED}${BOLD}✘ Database migration failed! Restore backup ASAP!${RESET}"
+                php artisan up
+                read -p $'\e[93mPress Enter to continue...\e[0m' -r
+                continue
+            }
+            
+            progress "Fixing webserver ownership (www-data)..."
+            chown -R www-data:www-data /var/www/pterodactyl/* 2>/dev/null || echo -e "${YELLOW}ℹ Ownership fix skipped (manual chown if needed).${RESET}"
+            
+            progress "Restarting queue workers..."
+            php artisan queue:restart
+            
+            progress "Bringing panel back online..."
+            php artisan up
+            
+            echo
+            echo -e "${NEON_GREEN}${BOLD}╔══════════════════════════════════════════════════════════════╗${RESET}"
+            echo -e "${NEON_GREEN}${BOLD}║               JEXACTYL MIGRATION SUCCESSFUL!                  ║${RESET}"
+            echo -e "${NEON_GREEN}${BOLD}║  Your panel is now running Jexactyl v3.7.4 (latest stable)   ║${RESET}"
+            echo -e "${NEON_GREEN}${BOLD}║  Enjoy billing, ticketing, improved UI & many more features! ║${RESET}"
+            echo -e "${NEON_GREEN}${BOLD}╚══════════════════════════════════════════════════════════════╝${RESET}"
+            echo
+            echo -e "${CYAN}${BOLD}➜ Hard refresh browser (Ctrl+Shift+R) to load the new panel.${RESET}"
+            echo -e "${WHITE}${DIM}Welcome to Jexactyl! 🎉${RESET}"
+            
+            read -p $'\e[93mPress Enter to continue...\e[0m' -r
+            ;;
+    esac
+done
